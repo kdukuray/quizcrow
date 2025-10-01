@@ -312,7 +312,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         <FormItem>
                                             <FormLabel htmlFor="school" className="flex items-center gap-2"><School className="h-4 w-4" />School*</FormLabel>
                                             <FormControl>
-                                                <Input id="school" {...field} />
+                                                <Input id="school" {...field} placeholder="e.g. Harvard University"/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -329,7 +329,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         <FormItem>
                                             <FormLabel htmlFor="subject" className="flex items-center gap-2"><BookOpen className="h-4 w-4" />Subject*</FormLabel>
                                             <FormControl>
-                                                <Input id="subject" {...field} />
+                                                <Input id="subject" {...field} placeholder="e.g. Calculus 1"/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -346,7 +346,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         <FormItem>
                                             <FormLabel htmlFor="title" className="flex items-center gap-2"><Tags className="h-4 w-4" />Title*</FormLabel>
                                             <FormControl>
-                                                <Input id="title" {...field} />
+                                                <Input id="title" {...field} placeholder="e.g. Fall 2023 Calculus 1 Midterm"/>
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -363,7 +363,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         <FormItem>
                                             <FormLabel htmlFor="courseCode" className="flex items-center gap-2"><BookOpen className="h-4 w-4" />Course Code</FormLabel>
                                             <FormControl>
-                                                <Input id="courseCode" {...field} />
+                                                <Input id="courseCode" {...field} placeholder="e.g. MATH 203"/>
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -379,7 +379,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         <FormItem>
                                             <FormLabel htmlFor="professor" className="flex items-center gap-2"><User className="h-4 w-4" />Professor</FormLabel>
                                             <FormControl>
-                                                <Input id="professor" {...field} />
+                                                <Input id="professor" {...field} placeholder="e.g. Mr.Andrew Nguyen"/>
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -497,7 +497,7 @@ export default function UploadQuizForm({ setLoading }: CreateQuizFormProps) {
                                         {quizTags.includes(tag) ? "✓ " : ""}{tag}
                                     </button>
                                 ))}
-                                <Input ref={newTagRef}></Input>
+                                <Input ref={newTagRef} placeholder="e.g. math203, calculus1, midterm "></Input>
                                 {(quizTags.length < 3) ?
                                     <Button type="button" onClick={(e) => addTag(e)}>Add Tag</Button>
                                     :
