@@ -82,7 +82,7 @@ export default function QuizDetailPage({ params }: QuizDetailPageProps) {
 
   useEffect(() => {
     fetchQuiz()
-  }, [params, fetchQuiz])
+  }, [params])
 
 
   return (

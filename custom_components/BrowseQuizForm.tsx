@@ -54,7 +54,7 @@ export default function BrowseQuizForm() {
     
     // defaults for routes (find a better way to do this later)
     newSearchParams.set("pageNumber", String(1))
-    newSearchParams.set("soritng", "newest")
+    newSearchParams.set("sorting", "newest")
     router.push(`/quiz/browse/results?${newSearchParams.toString()}`)
 
   }

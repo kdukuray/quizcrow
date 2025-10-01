@@ -8,20 +8,22 @@ import { toast } from "sonner";
 type BrowseResultsCardProp = {
     quiz: Quiz
 }
+
 export default function ResultsCard({ quiz }: BrowseResultsCardProp) {
     const [quizTags, setQuizTags] = useState<QuizTag[]>([])
-    useEffect(()=>{
+    
+    useEffect(() => {
         fetchQuizToTags(quiz.id!)
-        .then((quizToTags: QuizToTags[])=>{
-            fetchQuizTags(quizToTags)
-            .then((fetchedQuizTags: QuizTag[])=>{
-                setQuizTags(fetchedQuizTags)
+            .then((quizToTags: QuizToTags[]) => {
+                fetchQuizTags(quizToTags)
+                    .then((fetchedQuizTags: QuizTag[]) => {
+                        setQuizTags(fetchedQuizTags)
+                    })
             })
-        })
-        .catch(()=>{
-            toast.error("Error occured fetching quiz tags.")
-        })
-    })
+            .catch(() => {
+                toast.error("Error occured fetching quiz tags.")
+            })
+    }, [quiz.id])
 
     return (
         <li key={quiz.id}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { PagePagination } from "@/custom_components/PagePagination";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { client } from "@/utils/supabaseClient";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Quiz } from "@/utils/types";
@@ -24,22 +24,20 @@ export interface BrowseQuizResultsPageSearchParams {
   sorting?: string,
 }
 
-interface BrowseQuizResultsPageProps {
-  searchParams: Promise<BrowseQuizResultsPageSearchParams>
-}
-
-export default function BrowseQuizResults({ searchParams }: BrowseQuizResultsPageProps) {
-
+export default function BrowseQuizResults() {
   const [results, setResults] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   // This is here so that it can be sent to the browse quiz form and populate it
-  const [queriedQuizData, setQueriedQuizData]  = useState<BrowseQuizResultsPageSearchParams>({ school: "" })
+  const [queriedQuizData, setQueriedQuizData] = useState<BrowseQuizResultsPageSearchParams>({ school: "" })
   const [pageNumber, setPageNumber] = useState<number>(1)
   const pageLimit: number = 10
 
   const router = useRouter()
-  const pathname: string = usePathname()                 
-  const oldSearchParams = useSearchParams()    
+  const pathname: string = usePathname()
+  const oldSearchParams = useSearchParams()
+
+  // Expose a string named "searchParams" so the existing useEffect dependency remains unchanged
+  const searchParams = oldSearchParams.toString();
 
   // This function makes sure the pageNumber is in sync with the actual page number
   function initPageNumber(pageNumber: string | undefined) {
@@ -47,18 +45,26 @@ export default function BrowseQuizResults({ searchParams }: BrowseQuizResultsPag
   }
 
   // This function adjsuts the sorting of the fetched quizes
-  function adjustSorting(sorting: string) {
+  async function adjustSorting(sorting: string) {
     const newSearchParams = new URLSearchParams(oldSearchParams.toString());
     newSearchParams.set("sorting", sorting)
-    console.log(`${pathname}?${newSearchParams.toString()}`)
     router.push(`${pathname}?${newSearchParams.toString()}`)
   }
 
   // This function retrieves Quiz Results from the database.
   async function fetchQuizResults() {
     setLoading(true)
-    // resolve search params
-    const browseResultsSearchParams = await searchParams
+    // resolve search params (now built from the hook instead of awaiting a prop)
+    const browseResultsSearchParams: BrowseQuizResultsPageSearchParams = {
+      school: oldSearchParams.get("school") ?? "",
+      subject: oldSearchParams.get("subject") ?? undefined,
+      courseCode: oldSearchParams.get("courseCode") ?? undefined,
+      professor: oldSearchParams.get("professor") ?? undefined,
+      yearStart: oldSearchParams.get("yearStart") ?? undefined,
+      yearEnd: oldSearchParams.get("yearEnd") ?? undefined,
+      pageNumber: oldSearchParams.get("pageNumber") ?? undefined,
+      sorting: oldSearchParams.get("sorting") ?? undefined,
+    };
 
     // side affects
     initPageNumber(browseResultsSearchParams.pageNumber)
@@ -78,7 +84,7 @@ export default function BrowseQuizResults({ searchParams }: BrowseQuizResultsPag
 
     if (browseResultsSearchParams.sorting && browseResultsSearchParams.sorting === "oldest") {
       quizResultsQuery = quizResultsQuery.order("createdAt", { ascending: true })
-    } 
+    }
     else {
       quizResultsQuery = quizResultsQuery.order("createdAt", { ascending: false })
     }
@@ -96,54 +102,56 @@ export default function BrowseQuizResults({ searchParams }: BrowseQuizResultsPag
 
   useEffect(() => {
     fetchQuizResults()
-  }, [searchParams, fetchQuizResults]);
+  }, [searchParams]);
 
-  const currentSorting = queriedQuizData.sorting ?? "newest" 
+  const currentSorting = queriedQuizData.sorting ?? "newest"
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 pt-20 sm:pt-20 pb-20 sm:pb-30 relative">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-8 sm:pt-12">
+    <Suspense fallback={<div className="p-4">Loading results…</div>}>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 pt-20 sm:pt-20 pb-20 sm:pb-30 relative">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-8 sm:pt-12">
 
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Browse Results</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Tune the filters, then pick a quiz to view details.</p>
-        </div>
-
-        <LoadingOverlay show={loading} label="Fetching Results..." />
-        <BrowseResultsForm queriedQuizData={queriedQuizData} />
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
-         
-          <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
-            Showing <span className="font-medium">{results.length}</span> result{results.length !== 1 ? 's' : ''}
-          </p>
-          <div className="order-1 sm:order-2">
-            <select
-              className="w-full sm:w-auto border rounded-md px-3 py-2 text-xs sm:text-sm bg-white"
-              value={currentSorting}                            
-              onChange={(e) => adjustSorting(e.target.value)} 
-            >
-              <option value="newest">Sort: Most recent</option>
-              <option value="oldest">Sort: Oldest</option>
-            </select>
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">Browse Results</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Tune the filters, then pick a quiz to view details.</p>
           </div>
-        </div>
 
-        {results.length === 0 && !loading ? (
-          <div className="bg-white/80 backdrop-blur-sm border rounded-xl sm:rounded-2xl shadow-sm p-8 sm:p-12 text-center">
-            <p className="text-gray-500 text-sm sm:text-base">No results found. Try adjusting your filters.</p>
+          <LoadingOverlay show={loading} label="Fetching Results..." />
+          <BrowseResultsForm queriedQuizData={queriedQuizData} />
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+
+            <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+              Showing <span className="font-medium">{results.length}</span> result{results.length !== 1 ? 's' : ''}
+            </p>
+            <div className="order-1 sm:order-2">
+              <select
+                className="w-full sm:w-auto border rounded-md px-3 py-2 text-xs sm:text-sm bg-white"
+                value={currentSorting}
+                onChange={(e) => adjustSorting(e.target.value)}
+              >
+                <option value="newest">Sort: Most recent</option>
+                <option value="oldest">Sort: Oldest</option>
+              </select>
+            </div>
           </div>
-        ) : (
-          <ul className="space-y-2 sm:space-y-3">
-            {results && results.map((quiz, index) => (
-              <BrowseResultsCard quiz={quiz} key={index} />
-            ))}
-          </ul>
-        )}
+
+          {results.length === 0 && !loading ? (
+            <div className="bg-white/80 backdrop-blur-sm border rounded-xl sm:rounded-2xl shadow-sm p-8 sm:p-12 text-center">
+              <p className="text-gray-500 text-sm sm:text-base">No results found. Try adjusting your filters.</p>
+            </div>
+          ) : (
+            <ul className="space-y-2 sm:space-y-3">
+              {results && results.map((quiz, index) => (
+                <BrowseResultsCard quiz={quiz} key={index} />
+              ))}
+            </ul>
+          )}
+
+        </div>
+        <PagePagination pageNumber={pageNumber} nextPageAvailable={results.length == pageLimit} ></PagePagination>
 
       </div>
-      <PagePagination pageNumber={pageNumber} nextPageAvailable={results.length == pageLimit} ></PagePagination>
-
-    </div>
+    </Suspense>
   );
 }
