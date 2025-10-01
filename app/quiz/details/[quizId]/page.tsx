@@ -6,6 +6,7 @@ import { Quiz, QuizTag } from "@/utils/types";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface QuizDetailPageProps {
   params: Promise<{ quizId: string }>
@@ -20,9 +21,9 @@ export type QuizToTags = {
 
 // This function fetches the tags assocaited with the quiz
 export async function fetchQuizTags(quizToTags: QuizToTags[]): Promise<QuizTag[]> {
-  let allTags: QuizTag[] = []
+  const allTags: QuizTag[] = []
   for (let i = 0; i < quizToTags.length; i++) {
-    const fetchQuizTagResponse: PostgrestSingleResponse<any> = await client.from("quizTag").select("*").eq("id", quizToTags[i].tagId).single()
+    const fetchQuizTagResponse: PostgrestSingleResponse<QuizTag> = await client.from("quizTag").select("*").eq("id", quizToTags[i].tagId).single()
     if (fetchQuizTagResponse.error) {
       toast.error("Failed fetching one of the quiz tags.")
     }
@@ -38,7 +39,7 @@ export async function fetchQuizTags(quizToTags: QuizToTags[]): Promise<QuizTag[]
 // This function fetches the quiz tags associated with a quiz
 export async function fetchQuizToTags(quizId: number): Promise<QuizToTags[]> {
   let fetchedQuizToTags: QuizToTags[] = []
-  const fetchQuizToTagsResponse: PostgrestSingleResponse<any[]> = await client.from("quizToTags").select("*").eq("quizId", quizId)
+  const fetchQuizToTagsResponse: PostgrestSingleResponse<QuizToTags[]> = await client.from("quizToTags").select("*").eq("quizId", quizId)
   if (fetchQuizToTagsResponse.error) {
     toast.error("Failed to retrieve tags associated with this quiz.")
   }
@@ -81,7 +82,7 @@ export default function QuizDetailPage({ params }: QuizDetailPageProps) {
 
   useEffect(() => {
     fetchQuiz()
-  }, [params])
+  }, [params, fetchQuiz])
 
 
   return (
@@ -93,7 +94,7 @@ export default function QuizDetailPage({ params }: QuizDetailPageProps) {
         <>
           <div className="mb-4 mt-10">
             <div className="text-sm text-gray-500 flex items-center gap-2">
-              <a href="/" className="hover:underline">Home</a>
+              <Link href="/" className="hover:underline">Home</Link>
               <span>/</span>
               <a href="/quiz/browse" className="hover:underline">Browse</a>
               <span>/</span>

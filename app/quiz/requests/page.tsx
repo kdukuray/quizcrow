@@ -181,12 +181,12 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
 
   useEffect(() => {
     fetchQuizRequests()
-  }, [searchParams])
+  }, [searchParams, fetchQuizRequests])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 px-6 pt-20 pb-20 relative">
       <div className="max-w-6xl pt-12 mx-auto">
-        
+
         {/* header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
           <div>

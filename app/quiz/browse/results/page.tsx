@@ -96,7 +96,7 @@ export default function BrowseQuizResults({ searchParams }: BrowseQuizResultsPag
 
   useEffect(() => {
     fetchQuizResults()
-  }, [searchParams]);
+  }, [searchParams, fetchQuizResults]);
 
   const currentSorting = queriedQuizData.sorting ?? "newest" 
 

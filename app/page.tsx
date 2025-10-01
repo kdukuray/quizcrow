@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, UploadCloud, Search, Users, Shield, Sparkles, ArrowRight, Podcast } from "lucide-react";
+import { BookOpen, UploadCloud, Search, Users, Shield, Sparkles, ArrowRight, Podcast, LucideProps } from "lucide-react";
 import { motion } from "framer-motion";
 import { currentYear, discordLink, githubRepoLink } from "@/lib/constants";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { ForwardRefExoticComponent, RefAttributes, useRef } from "react";
 import { z } from "zod"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +21,7 @@ type Statistic = {
   value: string
 }
 type ValueProposition = {
-  tag_icon: any,
+  tag_icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>,
   title: string,
   content: string
 }
