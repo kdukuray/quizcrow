@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { BookOpen, GraduationCap, ShieldCheck, UploadCloud, Users, Github, HelpCircle, Search, Sparkles, HeartHandshake, FileText, Star } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";

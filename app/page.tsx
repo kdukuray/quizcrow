@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, UploadCloud, Search, Users, Shield, Sparkles, ArrowRight } from "lucide-react";
+import { BookOpen, UploadCloud, Search, Users, Shield, Sparkles, ArrowRight, Podcast } from "lucide-react";
 import { motion } from "framer-motion";
-import { currentYear, githubRepoLink } from "@/lib/constants";
+import { currentYear, discordLink, githubRepoLink } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import { z } from "zod"
@@ -134,14 +134,22 @@ export default function Home() {
 
             {/* primary CTAs */}
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+
+              <Button asChild size="lg" variant="outline" className="px-6">
+                <Link href="/quiz/requests/create" className="flex items-center gap-2">
+                  <UploadCloud className="h-4 w-4" /> Request a Quiz
+                </Link>
+              </Button>
+
               <Button asChild size="lg" className="px-6">
                 <Link href="/quiz/browse" className="flex items-center gap-2">
                   <Search className="h-4 w-4" /> Browse Quizes
                 </Link>
               </Button>
+
               <Button asChild size="lg" variant="outline" className="px-6">
-                <Link href="/quiz/requests/create" className="flex items-center gap-2">
-                  <UploadCloud className="h-4 w-4" /> Request a Quiz
+                <Link href={discordLink} className="flex items-center gap-2">
+                  <Podcast className="h-4 w-4" /> Join Discord
                 </Link>
               </Button>
             </div>
@@ -271,11 +279,11 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h3 className="text-2xl md:text-3xl font-bold">Join the community. Study smarter.</h3>
-              <p className="mt-2 text-white/90 max-w-xl">Create an account to save favorites, follow courses, and get notified when requests are fulfilled.</p>
+              <p className="mt-2 text-white/90 max-w-xl"> Join us on Discord</p>
             </div>
             <div className="flex gap-3">
               <Button asChild size="lg" variant="secondary" className="text-blue-700">
-                <Link href="/accounts/signup">Create account</Link>
+                <Link href={discordLink} target="_blank">QuizCrow Discord</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-transparent text-white border-white/60 hover:bg-white/10">
                 <Link href="/quiz/browse">Explore first</Link>
