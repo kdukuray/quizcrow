@@ -51,7 +51,7 @@ export async function fetchQuizToTags(quizId: number): Promise<QuizToTags[]> {
   return fetchedQuizToTags
 }
 
-export default function QuizDetailPage({ params }: QuizDetailPageProps) {
+export default function QuizDetailsPage({ params }: QuizDetailPageProps) {
 
   const [quiz, setQuiz] = useState<Quiz>()
   const [quizTags, setQuizTags] = useState<QuizTag[]>([])

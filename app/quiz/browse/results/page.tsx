@@ -1,6 +1,6 @@
 "use client";
 
-import { PagePagination } from "@/custom_components/PagePagination";
+import PagePagination from "@/custom_components/PagePagination";
 import { useState, useEffect, Suspense } from "react";
 import { client } from "@/utils/supabaseClient";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -24,7 +24,7 @@ export interface BrowseQuizResultsPageSearchParams {
   sorting?: string,
 }
 
-function BrowseQuizResultsContent() {
+function BrowseQuizResultsPageContent() {
   const [results, setResults] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   // This is here so that it can be sent to the browse quiz form and populate it
@@ -34,10 +34,10 @@ function BrowseQuizResultsContent() {
 
   const router = useRouter()
   const pathname: string = usePathname()
-  const oldSearchParams = useSearchParams()
+  const currentSearchParams = useSearchParams()
 
   // Expose a string named "searchParams" so the existing useEffect dependency remains unchanged
-  const searchParams = oldSearchParams.toString();
+  const searchParams = currentSearchParams.toString();
 
   // This function makes sure the pageNumber is in sync with the actual page number
   function initPageNumber(pageNumber: string | undefined) {
@@ -46,7 +46,7 @@ function BrowseQuizResultsContent() {
 
   // This function adjsuts the sorting of the fetched quizes
   async function adjustSorting(sorting: string) {
-    const newSearchParams = new URLSearchParams(oldSearchParams.toString());
+    const newSearchParams = new URLSearchParams(currentSearchParams.toString());
     newSearchParams.set("sorting", sorting)
     router.push(`${pathname}?${newSearchParams.toString()}`)
   }
@@ -56,14 +56,14 @@ function BrowseQuizResultsContent() {
     setLoading(true)
     // resolve search params (now built from the hook instead of awaiting a prop)
     const browseResultsSearchParams: BrowseQuizResultsPageSearchParams = {
-      school: oldSearchParams.get("school") ?? "",
-      subject: oldSearchParams.get("subject") ?? undefined,
-      courseCode: oldSearchParams.get("courseCode") ?? undefined,
-      professor: oldSearchParams.get("professor") ?? undefined,
-      yearStart: oldSearchParams.get("yearStart") ?? undefined,
-      yearEnd: oldSearchParams.get("yearEnd") ?? undefined,
-      pageNumber: oldSearchParams.get("pageNumber") ?? undefined,
-      sorting: oldSearchParams.get("sorting") ?? undefined,
+      school: currentSearchParams.get("school") ?? "",
+      subject: currentSearchParams.get("subject") ?? undefined,
+      courseCode: currentSearchParams.get("courseCode") ?? undefined,
+      professor: currentSearchParams.get("professor") ?? undefined,
+      yearStart: currentSearchParams.get("yearStart") ?? undefined,
+      yearEnd: currentSearchParams.get("yearEnd") ?? undefined,
+      pageNumber: currentSearchParams.get("pageNumber") ?? undefined,
+      sorting: currentSearchParams.get("sorting") ?? undefined,
     };
 
     // side affects
@@ -154,10 +154,10 @@ function BrowseQuizResultsContent() {
   );
 }
 
-export default function BrowseQuizResults() {
+export default function BrowseQuizResultsPage() {
   return (
-    <Suspense fallback={<div className="p-4">Loading results…</div>}>
-      <BrowseQuizResultsContent />
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 pt-20 sm:pt-20 pb-20 sm:pb-30 relative"><LoadingOverlay show={true} label="Fetching Results..."/></div>}>
+      <BrowseQuizResultsPageContent />
     </Suspense>
   );
 }

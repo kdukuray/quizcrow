@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowUp } from "lucide-react";
-import { PagePagination } from "@/custom_components/PagePagination";
+import PagePagination from "@/custom_components/PagePagination";
 import { QuizRequests } from "@/utils/types";
 import { client } from "@/utils/supabaseClient";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -29,24 +29,21 @@ interface QuizRequestData {
   upvotes: number
 }
 
-interface QuizRequestsPageParams {
-  searchParams: Promise<QuizRequestsPageSearchParams>
-}
-
-export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParams) {
+function QuizRequestsPageContent() {
 
   const [quizRequests, setQuizRequests] = useState<QuizRequests[]>([])
   const router = useRouter()
   const [pageNumber, setPageNumber] = useState<number>(1)
   const pageLimit: number = 10
   const pathname: string = usePathname()
-  const oldSearchParams = useSearchParams()
+  const currentSearchParams = useSearchParams()
   const [loading, setLoading] = useState<boolean>(false)
   const [queriedQuizRequestsData, setQueriedQuizRequestsData] = useState<QuizRequestsPageSearchParams>({})
+  const searchParams = currentSearchParams.toString()
 
   // This function adjsuts the sorting of the fetched quiz results
   function adjustSorting(value: string) {
-    const newSearchParams = new URLSearchParams(oldSearchParams.toString())
+    const newSearchParams = new URLSearchParams(currentSearchParams.toString())
     newSearchParams.set("sorting", value)
 
     // defaults
@@ -94,21 +91,31 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
   // This function fetches quiz results from the database
   async function fetchQuizRequests() {
     setLoading(true)
-    const quizRequestSearchParams = await searchParams;
+    
+    // resolve search params (now built from the hook instead of awaiting a prop)
+    const quizRequestsSearchParams: QuizRequestsPageSearchParams = {
+      pageNumber: currentSearchParams.get("pageNumber")!,
+      school: currentSearchParams.get("school") ?? undefined,
+      subject: currentSearchParams.get("subject") ?? undefined,
+      courseCode: currentSearchParams.get("courseCode") ?? undefined,
+      professor: currentSearchParams.get("professor") ?? undefined,
+      year: currentSearchParams.get("year") ?? undefined,
+      sorting: currentSearchParams.get("sorting") ?? undefined,
+    }
     // side affects
-    initPageNumber(quizRequestSearchParams.pageNumber)
+    initPageNumber(quizRequestsSearchParams.pageNumber)
 
-    setQueriedQuizRequestsData(quizRequestSearchParams)
+    setQueriedQuizRequestsData(quizRequestsSearchParams)
 
-    const rangeStart: number = calculateQueryRangeBeginning(Number(quizRequestSearchParams.pageNumber), pageLimit)
+    const pageNum = Number.parseInt(quizRequestsSearchParams.pageNumber ?? "1", 10) || 1
+    const rangeStart: number = calculateQueryRangeBeginning(pageNum, pageLimit)
     const rangeEnd: number = rangeStart + pageLimit - 1
 
-
     let quizRequestsQuery = client.from("quizRequest").select("*")
-    if (quizRequestSearchParams.sorting == "oldest") {
+    if (quizRequestsSearchParams.sorting == "oldest") {
       quizRequestsQuery = quizRequestsQuery.order("createdAt", { ascending: true })
     }
-    else if (quizRequestSearchParams.sorting == "upvotes") {
+    else if (quizRequestsSearchParams.sorting == "upvotes") {
       quizRequestsQuery = quizRequestsQuery.order("upvotes", { ascending: false })
     }
     else {
@@ -116,9 +123,9 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
     }
 
     // if all are props on the search params are falsey (excluding pageNumber and sorting props), just get the last 10 quiz results
-    const { pageNumber, sorting, ...filteredParams } = quizRequestSearchParams;
+    const { pageNumber, sorting, ...filteredParams } = quizRequestsSearchParams;
     if (!(Object.values(filteredParams).some(value => !!value))) {
-      const quizRequestsResponse: PostgrestSingleResponse<QuizRequests[]> = await quizRequestsQuery.range(rangeStart, rangeEnd).limit(pageLimit)
+      const quizRequestsResponse: PostgrestSingleResponse<QuizRequests[]> = await quizRequestsQuery.range(rangeStart, rangeEnd)
       // const quizRequestsQuery: PostgrestSingleResponse<QuizRequests[]> = await client.from("quizRequest").select("*").order("createdAt", { ascending: false }).range(rangeStart, rangeEnd).limit(pageLimit)
       // if (quizRequestsQuery.error) {
       if (quizRequestsResponse.error) {
@@ -132,39 +139,39 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
     // else of at least one the quiz requests search props are truthy, query the database with them
     else {
       // let quizRequestsQuery = client.from("quizRequest").select("*")
-      if (quizRequestSearchParams.school) quizRequestsQuery = quizRequestsQuery.ilike("school", `%${quizRequestSearchParams.school}%`)
-      if (quizRequestSearchParams.subject) quizRequestsQuery = quizRequestsQuery.ilike("subject", `%${quizRequestSearchParams.subject}%`)
-      if (quizRequestSearchParams.courseCode) quizRequestsQuery = quizRequestsQuery.ilike("courseCode", `%${quizRequestSearchParams.courseCode}%`)
-      if (quizRequestSearchParams.professor) quizRequestsQuery = quizRequestsQuery.ilike("professor", `%${quizRequestSearchParams.professor}%`)
+      if (quizRequestsSearchParams.school) quizRequestsQuery = quizRequestsQuery.ilike("school", `%${quizRequestsSearchParams.school}%`)
+      if (quizRequestsSearchParams.subject) quizRequestsQuery = quizRequestsQuery.ilike("subject", `%${quizRequestsSearchParams.subject}%`)
+      if (quizRequestsSearchParams.courseCode) quizRequestsQuery = quizRequestsQuery.ilike("courseCode", `%${quizRequestsSearchParams.courseCode}%`)
+      if (quizRequestsSearchParams.professor) quizRequestsQuery = quizRequestsQuery.ilike("professor", `%${quizRequestsSearchParams.professor}%`)
 
       // get requests that match year with one year offset (give or take)
       // lower limit
-      if (quizRequestSearchParams.year) {
-        if ((Number(quizRequestSearchParams.year) > 2000)) {
-          quizRequestsQuery = quizRequestsQuery.gte("year", Number(quizRequestSearchParams.year) - 1)
+      if (quizRequestsSearchParams.year) {
+        if ((Number(quizRequestsSearchParams.year) > 2000)) {
+          quizRequestsQuery = quizRequestsQuery.gte("year", Number(quizRequestsSearchParams.year) - 1)
         }
         else {
-          quizRequestsQuery = quizRequestsQuery.gte("year", Number(quizRequestSearchParams.year))
+          quizRequestsQuery = quizRequestsQuery.gte("year", Number(quizRequestsSearchParams.year))
         }
         // upper limit
-        if ((Number(quizRequestSearchParams.year) < currentYear)) {
-          quizRequestsQuery = quizRequestsQuery.lte("year", Number(quizRequestSearchParams.year) + 1)
+        if ((Number(quizRequestsSearchParams.year) < currentYear)) {
+          quizRequestsQuery = quizRequestsQuery.lte("year", Number(quizRequestsSearchParams.year) + 1)
         }
         else {
-          quizRequestsQuery = quizRequestsQuery.lte("year", Number(quizRequestSearchParams.year))
+          quizRequestsQuery = quizRequestsQuery.lte("year", Number(quizRequestsSearchParams.year))
         }
       }
 
-      if (quizRequestSearchParams.sorting == "oldest") {
+      if (quizRequestsSearchParams.sorting == "oldest") {
         quizRequestsQuery = quizRequestsQuery.order("createdAt", { ascending: true })
       }
-      else if (quizRequestSearchParams.sorting == "upvotes") {
+      else if (quizRequestsSearchParams.sorting == "upvotes") {
         quizRequestsQuery = quizRequestsQuery.order("upvotes", { ascending: false })
       }
       else {
         quizRequestsQuery = quizRequestsQuery.order("createdAt", { ascending: false })
       }
-      const quizRequestsResponse: PostgrestSingleResponse<QuizRequests[]> = await quizRequestsQuery.range(rangeStart, rangeEnd).limit(pageLimit)
+      const quizRequestsResponse: PostgrestSingleResponse<QuizRequests[]> = await quizRequestsQuery.range(rangeStart, rangeEnd)
 
       if (quizRequestsResponse.error) {
         console.log("An Error Ocurred trying to retrieve the quizrequests", quizRequestsResponse.error)
@@ -181,7 +188,9 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
 
   useEffect(() => {
     fetchQuizRequests()
-  }, [searchParams, fetchQuizRequests])
+  }, [searchParams])
+
+  const currentSorting = (queriedQuizRequestsData.sorting ?? "newest")
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 px-6 pt-20 pb-20 relative">
@@ -212,7 +221,11 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
           }
 
           <div>
-            <select className="border rounded-md px-3 py-2 text-sm" onChange={e => adjustSorting(e.target.value)}>
+            <select
+              className="border rounded-md px-3 py-2 text-sm"
+              value={currentSorting}
+              onChange={e => adjustSorting(e.target.value)}
+            >
               <option value="newest">Sort: Most Recent</option>
               <option value="oldest">Sort: Oldest</option>
               <option value="upvotes">Sort: Upvotes</option>
@@ -265,4 +278,14 @@ export default function QuizRequestsPage({ searchParams }: QuizRequestsPageParam
       <PagePagination pageNumber={pageNumber} nextPageAvailable={quizRequests.length == pageLimit}></PagePagination>
     </div>
   );
+}
+
+export default function QuizRequestsPage() {
+
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 pt-20 sm:pt-20 pb-20 sm:pb-30 relative"><LoadingOverlay show={true} label="Fetching Quiz Requests..."/></div>}>
+      <QuizRequestsPageContent />
+    </Suspense>
+  )
+
 }
