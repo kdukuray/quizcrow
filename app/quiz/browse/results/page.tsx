@@ -24,7 +24,7 @@ export interface BrowseQuizResultsPageSearchParams {
   sorting?: string,
 }
 
-export default function BrowseQuizResults() {
+function BrowseQuizResultsContent() {
   const [results, setResults] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   // This is here so that it can be sent to the browse quiz form and populate it
@@ -107,7 +107,6 @@ export default function BrowseQuizResults() {
   const currentSorting = queriedQuizData.sorting ?? "newest"
 
   return (
-    <Suspense fallback={<div className="p-4">Loading results…</div>}>
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 pt-20 sm:pt-20 pb-20 sm:pb-30 relative">
         <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-8 sm:pt-12">
 
@@ -152,6 +151,13 @@ export default function BrowseQuizResults() {
         <PagePagination pageNumber={pageNumber} nextPageAvailable={results.length == pageLimit} ></PagePagination>
 
       </div>
+  );
+}
+
+export default function BrowseQuizResults() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading results…</div>}>
+      <BrowseQuizResultsContent />
     </Suspense>
   );
 }
