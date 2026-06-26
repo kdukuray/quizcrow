@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/custom_components/Navbar";
 import Footer from "@/custom_components/Footer";
+import SiteBanner from "@/custom_components/SiteBanner";
 import { Toaster } from "sonner";
 
 
@@ -34,8 +35,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
       >
+        <SiteBanner />
         <Navbar></Navbar>
-        {children}
+        <div className="pt-10">{children}</div>
         <Toaster richColors/>
         <Footer></Footer>
       </body>

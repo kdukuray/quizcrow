@@ -34,7 +34,7 @@ export default function Navbar() {
   } satisfies Variants;
 
   return (
-    <nav className="shadow-sm h-20 border-b-2 fixed w-full bg-white z-50">
+    <nav className="shadow-sm h-20 border-b-2 fixed top-10 w-full bg-white z-50">
       <div className="container mx-auto flex items-center justify-between px-6 h-20">
 
         {/* logo */}
